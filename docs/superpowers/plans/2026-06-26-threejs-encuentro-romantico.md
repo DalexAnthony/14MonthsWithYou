@@ -1,3 +1,34 @@
+# Encuentro Romántico — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a browser-based 3D mini-game where a girl searches for her boyfriend across a rotating world with clues.
+
+**Architecture:** Single HTML file with Three.js via CDN. Girl at center, world rotates on arrow keys. 6 biomes in a circle with NPCs and signs giving clues. Ending scene with boyfriend, flowers, and chocolates.
+
+**Tech Stack:** Three.js r152+ (CDN), vanilla JS, CSS for UI overlays
+
+**Global Constraints:**
+- No external assets — all geometry built with Three.js primitives
+- Single self-contained `index.html` file
+- Must work by opening in browser (no build step)
+- All text in Spanish
+- No emojis as UI icons
+
+---
+
+### Task 1: HTML Scaffold + Three.js Scene
+
+**Files:**
+- Create: `carpeta-de-prueba/index.html`
+
+**Interfaces:**
+- Consumes: nothing
+- Produces: Three.js scene with renderer, camera, lights, and animation loop
+
+- [ ] **Step 1: Create HTML with Three.js CDN**
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -117,50 +148,48 @@ worldGroup.add(ground);
 
 // --- Animation Loop ---
 function animate() {
-  updateInteraction();
   requestAnimationFrame(animate);
-
-  const rotSpeed = 0.02;
-  if (keys.left) worldGroup.rotation.y += rotSpeed;
-  if (keys.right) worldGroup.rotation.y -= rotSpeed;
-
-  // Girl bob
-  girlTime += 0.03;
-  girl.position.y = Math.sin(girlTime) * 0.05;
-
-  // Face the direction of movement
-  if (keys.left) girl.rotation.y = Math.PI / 4;
-  else if (keys.right) girl.rotation.y = -Math.PI / 4;
-  else girl.rotation.y = 0;
-
-  // Animate NPC float
-  worldGroup.children.forEach((child) => {
-    if (child.userData && child.userData.floatOffset !== undefined) {
-      const floatY = Math.sin(girlTime * 2 + child.userData.floatOffset) * 0.1;
-      child.position.y = floatY;
-      if (child.userData.glow) {
-        child.userData.glow.material.opacity = 0.3 + Math.sin(girlTime * 3 + child.userData.floatOffset) * 0.2;
-      }
-    }
-  });
-
-  // Animate encounter hearts
-  const hPos = hearts.geometry.attributes.position.array;
-  for (let i = 0; i < heartCount; i++) {
-    hPos[i * 3 + 1] += heartSpeeds[i].y;
-    if (hPos[i * 3 + 1] > 3.5) hPos[i * 3 + 1] = 0;
-  }
-  hearts.geometry.attributes.position.needsUpdate = true;
-
-  // Animate bouquet sway
-  bouquet.rotation.z = Math.sin(girlTime * 1.5) * 0.1;
-
-  // Check ending
-  checkEnding();
-
   renderer.render(scene, camera);
 }
+animate();
 
+// --- Resize ---
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// --- Placeholder exports for other tasks ---
+window.__scene = scene;
+window.__camera = camera;
+window.__worldGroup = worldGroup;
+window.__renderer = renderer;
+</script>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Verify scene loads**
+
+Open `index.html` in browser. Expected: green ground, sky blue background, lighting visible.
+
+- [ ] **Step 3: Commit**
+
+---
+
+### Task 2: Girl Character + World Rotation
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (append after placeholder exports)
+
+**Interfaces:**
+- Consumes: `window.__worldGroup` from Task 1
+- Produces: girl character at origin, keyboard rotation handler
+
+- [ ] **Step 1: Add girl character creation**
+
+```javascript
 // --- Girl Character ---
 function createGirl() {
   const group = new THREE.Group();
@@ -232,7 +261,67 @@ scene.add(girl);
 
 // Girl idle animation (gentle bob)
 let girlTime = 0;
+```
 
+- [ ] **Step 2: Add world rotation controls**
+
+```javascript
+// --- World Rotation ---
+const keys = { left: false, right: false };
+let targetRotation = 0;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+});
+
+// Add rotation to animation loop (update inside animate function)
+// Replace placeholder animate with:
+function animate() {
+  requestAnimationFrame(animate);
+
+  const rotSpeed = 0.02;
+  if (keys.left) worldGroup.rotation.y += rotSpeed;
+  if (keys.right) worldGroup.rotation.y -= rotSpeed;
+
+  // Girl bob
+  girlTime += 0.03;
+  girl.position.y = Math.sin(girlTime) * 0.05;
+
+  // Face the direction of movement
+  if (keys.left) girl.rotation.y = Math.PI / 4;
+  else if (keys.right) girl.rotation.y = -Math.PI / 4;
+  else girl.rotation.y = 0;
+
+  renderer.render(scene, camera);
+}
+```
+
+- [ ] **Step 3: Verify rotation**
+
+Open file. Expected: girl visible at center. Arrow keys rotate the world. Girl bobs gently.
+
+- [ ] **Step 4: Commit**
+
+---
+
+### Task 3: Create 6 Biomes Around the Circle
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (append after girl code)
+
+**Interfaces:**
+- Consumes: `worldGroup` from Task 1
+- Produces: 6 biome sectors with terrain decorations
+
+- [ ] **Step 1: Add biome creation function**
+
+```javascript
 // --- Biomes ---
 const biomeColors = {
   garden:     { ground: 0x7ec87e, decor: 0xff69b4, name: 'Jardín de Flores' },
@@ -270,16 +359,26 @@ function createBiomeSector(biome, data) {
   wedgeShape.lineTo(0, 0);
 
   const wedgeGeo = new THREE.ShapeGeometry(wedgeShape);
-  const wedgeMat = new THREE.MeshStandardMaterial({ color: colors.ground, roughness: 0.9, side: THREE.DoubleSide });
+  const wedgeMat = new THREE.MeshStandardMaterial({
+    color: colors.ground,
+    roughness: 0.9,
+    side: THREE.DoubleSide,
+  });
   const wedge = new THREE.Mesh(wedgeGeo, wedgeMat);
   wedge.rotation.x = -Math.PI / 2;
   wedge.position.y = 0.01;
   wedge.receiveShadow = true;
   group.add(wedge);
 
-  // Decorations
+  // Biome-specific decorations
+  const decorPos = {
+    x: Math.cos(midAngle) * 6,
+    z: Math.sin(midAngle) * 6,
+  };
+
   switch (biome.id) {
     case 'garden': {
+      // Flowers
       for (let i = 0; i < 12; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 2 + Math.random() * 8;
@@ -290,6 +389,7 @@ function createBiomeSector(biome, data) {
         flower.position.set(Math.cos(a) * r, 0.1, Math.sin(a) * r);
         group.add(flower);
       }
+      // Small bush
       for (let i = 0; i < 4; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 3 + Math.random() * 6;
@@ -324,6 +424,7 @@ function createBiomeSector(biome, data) {
       break;
     }
     case 'beach': {
+      // Water edge
       for (let i = 0; i < 3; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 13 + Math.random() * 2;
@@ -335,6 +436,7 @@ function createBiomeSector(biome, data) {
         water.rotation.x = -Math.PI / 2;
         group.add(water);
       }
+      // Palm trees
       for (let i = 0; i < 3; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 4 + Math.random() * 4;
@@ -356,6 +458,7 @@ function createBiomeSector(biome, data) {
       break;
     }
     case 'plaza': {
+      // Lamp posts
       for (let i = 0; i < 4; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 3 + Math.random() * 5;
@@ -372,6 +475,7 @@ function createBiomeSector(biome, data) {
         lamp.position.set(Math.cos(a) * r, 1.3, Math.sin(a) * r);
         group.add(lamp);
       }
+      // Small buildings
       for (let i = 0; i < 3; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 7 + Math.random() * 4;
@@ -386,6 +490,7 @@ function createBiomeSector(biome, data) {
       break;
     }
     case 'bridge': {
+      // Arch bridge
       for (let i = 0; i < 5; i++) {
         const a = data.angleStart + (data.angleEnd - data.angleStart) * (i / 5);
         const r = 6;
@@ -397,6 +502,7 @@ function createBiomeSector(biome, data) {
         arch.castShadow = true;
         group.add(arch);
       }
+      // Railings
       const railingMat = new THREE.MeshStandardMaterial({ color: 0x6c5ce7, emissive: 0x6c5ce7, emissiveIntensity: 0.1 });
       for (let i = 0; i < 4; i++) {
         const a = data.angleStart + (data.angleEnd - data.angleStart) * (i / 4);
@@ -408,6 +514,7 @@ function createBiomeSector(biome, data) {
       break;
     }
     case 'encounter': {
+      // Romantic decorations
       for (let i = 0; i < 20; i++) {
         const a = data.angleStart + Math.random() * (data.angleEnd - data.angleStart);
         const r = 2 + Math.random() * 8;
@@ -418,6 +525,7 @@ function createBiomeSector(biome, data) {
         heart.position.set(Math.cos(a) * r, 0.15 + Math.random() * 0.1, Math.sin(a) * r);
         group.add(heart);
       }
+      // Red carpet path
       for (let i = 0; i < 8; i++) {
         const a = data.angleStart + (data.angleEnd - data.angleStart) * (i / 8);
         const r = 2 + i * 1.2;
@@ -434,7 +542,7 @@ function createBiomeSector(biome, data) {
     }
   }
 
-  // Biome label (colored sphere floating above)
+  // Biome name label (floating text — we'll use a colored sphere for now)
   const label = new THREE.Mesh(
     new THREE.SphereGeometry(0.2, 8, 8),
     new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: colors.decor, emissiveIntensity: 0.3 })
@@ -452,41 +560,68 @@ biomeData.forEach((data) => {
   worldGroup.add(sector);
   biomes[data.id] = sector;
 });
+```
 
+- [ ] **Step 2: Verify biomes visible**
+
+Open file. Expected: 6 colored sectors visible around the circle, with decorations.
+
+- [ ] **Step 3: Commit**
+
+---
+
+### Task 4: NPCs + Interactive Signs with Clues
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (append after biome code)
+
+**Interfaces:**
+- Consumes: `worldGroup`, `biomes`, `biomeData` from Task 3
+- Produces: interactive objects (NPCs + signs) with click/space detection
+
+- [ ] **Step 1: Add clue data**
+
+```javascript
 // --- Clue System ---
 const clues = [
   {
-    npcText: 'Conejo: "Vi a tu amor pasar por aquí, iba hacia el bosque con algo en las manos..."',
-    signText: 'Cartel: "Jardín de los Suspiros — donde todo comenzó"',
+    npcText: '🌸 Conejo: "Vi a tu amor pasar por aquí, iba hacia el bosque con algo en las manos... 🌿"',
+    signText: 'Cartel: "Jardín de los Suspiros — donde todo comenzó 💕"',
   },
   {
-    npcText: 'Zorro: "Escuché que alguien preparaba algo especial en la playa. ¡Corre!"',
+    npcText: '🦊 Zorro: "Escuché que alguien preparaba algo especial en la playa. ¡Corre! ⛱️"',
     signText: 'Cartel: "Bosque Encantado — dicen que los enamorados dejan mensajes aquí"',
   },
   {
-    npcText: 'Pájaro: "Vi una figura vestida de azul cerca de la plaza del pueblo"',
-    signText: 'Cartel: "Playa del Atardecer — el mejor lugar para una declaración"',
+    npcText: '🐦 Pájaro: "Vi una figura vestida de azul cerca de la plaza del pueblo! 🏛️"',
+    signText: 'Cartel: "Playa del Atardecer — el mejor lugar para una declaración 🌅"',
   },
   {
-    npcText: 'Ardilla: "El chico de la sonrisa bonita preguntó por la floristería más cercana"',
-    signText: 'Cartel: "Plaza Central — donde los corazones se encuentran"',
+    npcText: '🐿️ Ardilla: "El chico de la sonrisa bonita preguntó por la floristería más cercana 🌺"',
+    signText: 'Cartel: "Plaza Central — donde los corazones se encuentran 💑"',
   },
   {
-    npcText: 'Ciervo: "Lo vi cruzando el puente... llevaba algo que brillaba"',
-    signText: 'Cartel: "Puente de los Suspiros — cruza y encuentra tu destino"',
+    npcText: '🦌 Ciervo: "Lo vi cruzando el puente... llevaba algo que brillaba ✨"',
+    signText: 'Cartel: "Puente de los Suspiros — cruza y encuentra tu destino 🌉"',
   },
   {
     npcText: null,
-    signText: 'Última pista: "Sigue el camino de pétalos... te está esperando"',
+    signText: 'Última pista: "Sigue el camino de pétalos... te está esperando 💝"',
   },
 ];
+```
 
+- [ ] **Step 2: Create interactive objects (NPCs + signs)**
+
+```javascript
 // --- Interactive Objects ---
 const interactables = [];
+let currentClueIndex = -1;
 let cluesFound = 0;
 
 function createNPC(angle, radius, color, type) {
   const group = new THREE.Group();
+  const midAngle = angle;
 
   // Body
   const body = new THREE.Mesh(
@@ -504,7 +639,7 @@ function createNPC(angle, radius, color, type) {
   head.position.y = 0.9;
   group.add(head);
 
-  // Features based on type
+  // Ears/features based on type
   if (type === 'rabbit') {
     for (const side of [-1, 1]) {
       const ear = new THREE.Mesh(
@@ -516,6 +651,7 @@ function createNPC(angle, radius, color, type) {
       group.add(ear);
     }
   } else if (type === 'bird') {
+    // Wings
     for (const side of [-1, 1]) {
       const wing = new THREE.Mesh(
         new THREE.ConeGeometry(0.15, 0.25, 6),
@@ -525,6 +661,7 @@ function createNPC(angle, radius, color, type) {
       wing.rotation.z = side * 0.5;
       group.add(wing);
     }
+    // Beak
     const beak = new THREE.Mesh(
       new THREE.ConeGeometry(0.04, 0.12, 6),
       new THREE.MeshStandardMaterial({ color: 0xff9900 })
@@ -533,6 +670,7 @@ function createNPC(angle, radius, color, type) {
     beak.rotation.x = 0.3;
     group.add(beak);
   } else if (type === 'squirrel') {
+    // Tail
     const tail = new THREE.Mesh(
       new THREE.SphereGeometry(0.15, 6, 6),
       new THREE.MeshStandardMaterial({ color: 0xcc7722 })
@@ -542,6 +680,7 @@ function createNPC(angle, radius, color, type) {
     group.add(tail);
     body.material.color.setHex(0xcc7722);
   } else if (type === 'deer') {
+    // Antlers
     for (const side of [-1, 1]) {
       const antler = new THREE.Mesh(
         new THREE.CylinderGeometry(0.02, 0.03, 0.3, 4),
@@ -554,6 +693,7 @@ function createNPC(angle, radius, color, type) {
     body.material.color.setHex(0xcd853f);
   }
 
+  // Floating animation
   const floatOffset = Math.random() * Math.PI * 2;
 
   // Glow ring
@@ -569,15 +709,20 @@ function createNPC(angle, radius, color, type) {
   glow.position.y = -0.1;
   group.add(glow);
 
-  group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  // Position in world
+  group.position.set(Math.cos(midAngle) * radius, 0, Math.sin(midAngle) * radius);
+
+  // Store metadata
   group.userData = { floatOffset, glow, type: 'npc' };
 
   return group;
 }
 
-function createSign(angle, radius) {
+function createSign(angle, radius, text) {
   const group = new THREE.Group();
+  const midAngle = angle;
 
+  // Post
   const post = new THREE.Mesh(
     new THREE.CylinderGeometry(0.04, 0.05, 0.8, 6),
     new THREE.MeshStandardMaterial({ color: 0x8B4513 })
@@ -585,6 +730,7 @@ function createSign(angle, radius) {
   post.position.y = 0.4;
   group.add(post);
 
+  // Board
   const board = new THREE.Mesh(
     new THREE.BoxGeometry(0.8, 0.4, 0.05),
     new THREE.MeshStandardMaterial({ color: 0xf5deb3 })
@@ -593,6 +739,7 @@ function createSign(angle, radius) {
   board.castShadow = true;
   group.add(board);
 
+  // Glow
   const glowGeo = new THREE.RingGeometry(0.4, 0.5, 16);
   const glowMat = new THREE.MeshBasicMaterial({
     color: 0x00ff88,
@@ -605,7 +752,7 @@ function createSign(angle, radius) {
   glow.position.y = 0.85;
   group.add(glow);
 
-  group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  group.position.set(Math.cos(midAngle) * radius, 0, Math.sin(midAngle) * radius);
   group.userData = { glow, type: 'sign' };
 
   return group;
@@ -614,21 +761,32 @@ function createSign(angle, radius) {
 // Place NPCs and signs in biomes (skip encounter biome — it has the boyfriend)
 const npcTypes = ['rabbit', 'bird', 'squirrel', 'deer'];
 const npcColors = [0xffffff, 0x3498db, 0xcc7722, 0xcd853f];
+const npcAngles = [];
 
 biomeData.forEach((data, i) => {
   if (data.id === 'encounter') return;
   const midAngle = (data.angleStart + data.angleEnd) / 2;
   const radius = 5.5;
 
+  // NPC at inner radius
   const npc = createNPC(midAngle, radius, npcColors[i] || 0xffffff, npcTypes[i] || 'rabbit');
   worldGroup.add(npc);
   interactables.push({ mesh: npc, biomeIndex: i, type: 'npc' });
+  npcAngles.push(midAngle);
 
-  const sign = createSign(midAngle, radius + 2.5);
+  // Sign at outer radius
+  const sign = createSign(midAngle, radius + 2.5, clues[i]?.signText || '');
   worldGroup.add(sign);
   interactables.push({ mesh: sign, biomeIndex: i, type: 'sign' });
 });
 
+// Encounter biome markers (not interactive, just decorative)
+const encounterAngle = (biomeData[5].angleStart + biomeData[5].angleEnd) / 2;
+```
+
+- [ ] **Step 3: Add interaction detection**
+
+```javascript
 // --- Interaction System ---
 const dialogueBox = document.getElementById('dialogue-box');
 const interactHint = document.getElementById('interact-hint');
@@ -636,10 +794,14 @@ const clueCounter = document.getElementById('clue-counter');
 let nearInteractable = null;
 
 function updateInteraction() {
+  // Check which biome center the camera is facing
   const facingAngle = -worldGroup.rotation.y;
+
+  // Map angle to 0-2PI
   let normAngle = facingAngle % (Math.PI * 2);
   if (normAngle < 0) normAngle += Math.PI * 2;
 
+  // Find which biome we're looking at
   let currentBiomeIndex = -1;
   for (let i = 0; i < biomeData.length; i++) {
     let start = biomeData[i].angleStart;
@@ -650,11 +812,12 @@ function updateInteraction() {
     }
   }
 
+  // Check if there's an interactable in this biome
   const nearby = interactables.find(
-    (ia) => ia.biomeIndex === currentBiomeIndex && ia.biomeIndex <= cluesFound
+    (ia) => ia.biomeIndex === currentBiomeIndex && ia.biomeIndex > cluesFound - 1
   );
 
-  if (nearby) {
+  if (nearby && nearby.biomeIndex <= cluesFound) {
     nearInteractable = nearby;
     interactHint.classList.add('visible');
   } else {
@@ -662,6 +825,7 @@ function updateInteraction() {
     interactHint.classList.remove('visible');
   }
 
+  // Update counter
   clueCounter.textContent = `✦ Pista ${cluesFound} / 6`;
 }
 
@@ -670,6 +834,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     const idx = nearInteractable.biomeIndex;
     const clue = clues[idx];
+
     if (!clue) return;
 
     const message = nearInteractable.type === 'npc' ? clue.npcText : clue.signText;
@@ -678,16 +843,39 @@ document.addEventListener('keydown', (e) => {
     dialogueBox.textContent = message;
     dialogueBox.classList.add('visible');
 
-    if (idx >= cluesFound) {
+    // Mark clue as found if first time in this biome
+    if (idx > cluesFound - 1) {
       cluesFound++;
       clueCounter.textContent = `✦ Pista ${cluesFound} / 6`;
     }
 
+    // Hide interact hint
     interactHint.classList.remove('visible');
     nearInteractable = null;
   }
 });
+```
 
+- [ ] **Step 4: Verify interaction**
+
+Open file. Navigate to a biome with arrows. Expected: hint appears. Press Space. Dialogue shows clue text.
+
+- [ ] **Step 5: Commit**
+
+---
+
+### Task 5: Boyfriend Character + Ending Scene
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (append after interaction code)
+
+**Interfaces:**
+- Consumes: `worldGroup`, `biomeData`, `cluesFound`, `scene` from previous tasks
+- Produces: boyfriend with flowers + chocolates, ending animation
+
+- [ ] **Step 1: Add boyfriend character**
+
+```javascript
 // --- Boyfriend Character ---
 function createBoyfriend() {
   const group = new THREE.Group();
@@ -727,7 +915,7 @@ function createBoyfriend() {
     group.add(eye);
   }
 
-  // Smile
+  // Smile (small torus)
   const smileMat = new THREE.MeshStandardMaterial({ color: 0xcc4444 });
   const smile = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 6, 12, Math.PI), smileMat);
   smile.position.set(0, 1.25, 0.35);
@@ -770,32 +958,68 @@ const boyfriend = createBoyfriend();
 // --- Flowers (Lilies) Bouquet ---
 function createBouquet() {
   const group = new THREE.Group();
+
+  // Stems
   const stemMat = new THREE.MeshStandardMaterial({ color: 0x2d8a2d });
   for (let i = 0; i < 5; i++) {
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4), stemMat);
-    stem.position.set((Math.random() - 0.5) * 0.15, 0.25, (Math.random() - 0.5) * 0.15);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4),
+      stemMat
+    );
+    stem.position.set(
+      (Math.random() - 0.5) * 0.15,
+      0.25,
+      (Math.random() - 0.5) * 0.15
+    );
     group.add(stem);
   }
-  const petalMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, emissive: 0xfff8f0, emissiveIntensity: 0.1 });
+
+  // Lily flowers (white petals)
+  const petalMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.2,
+    emissive: 0xfff8f0,
+    emissiveIntensity: 0.1,
+  });
   const centerMat = new THREE.MeshStandardMaterial({ color: 0xffdd44 });
+
   for (let i = 0; i < 5; i++) {
     const xOff = (Math.random() - 0.5) * 0.2;
     const zOff = (Math.random() - 0.5) * 0.2;
+
+    // Petals
     for (let p = 0; p < 6; p++) {
       const pAngle = (p / 6) * Math.PI * 2;
-      const petal = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), petalMat);
-      petal.position.set(xOff + Math.cos(pAngle) * 0.07, 0.5, zOff + Math.sin(pAngle) * 0.07);
+      const petal = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 6, 6),
+        petalMat
+      );
+      petal.position.set(
+        xOff + Math.cos(pAngle) * 0.07,
+        0.5,
+        zOff + Math.sin(pAngle) * 0.07
+      );
       petal.scale.set(1, 0.3, 1);
+      petal.rotation.x = Math.cos(pAngle) * 0.3;
+      petal.rotation.z = Math.sin(pAngle) * 0.3;
       group.add(petal);
     }
-    const center = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), centerMat);
+
+    // Center
+    const center = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 6),
+      centerMat
+    );
     center.position.set(xOff, 0.5, zOff);
     group.add(center);
   }
+
+  // Wrapping paper
   const wrapMat = new THREE.MeshStandardMaterial({ color: 0xff69b4, roughness: 0.6 });
   const wrap = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.2, 8), wrapMat);
   wrap.position.y = 0.1;
   group.add(wrap);
+
   return group;
 }
 
@@ -804,11 +1028,15 @@ const bouquet = createBouquet();
 // --- Chocolates Box ---
 function createChocolateBox() {
   const group = new THREE.Group();
+
+  // Box
   const boxMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.5 });
   const box = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.2), boxMat);
   box.position.y = 0.06;
   box.castShadow = true;
   group.add(box);
+
+  // Ribbon
   const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
   const ribbon1 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.02, 0.04), ribbonMat);
   ribbon1.position.y = 0.12;
@@ -816,61 +1044,105 @@ function createChocolateBox() {
   const ribbon2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.22), ribbonMat);
   ribbon2.position.y = 0.12;
   group.add(ribbon2);
+
+  // Bow
   const bowMat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
   for (const side of [-1, 1]) {
     const bowLoop = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.015, 6, 8), bowMat);
     bowLoop.position.set(side * 0.05, 0.16, 0);
     group.add(bowLoop);
   }
+
   return group;
 }
 
 const chocolateBox = createChocolateBox();
+```
 
-// Position in encounter biome
-const encounterBiome = biomeData[5];
-const encounterMid = (encounterBiome.angleStart + encounterBiome.angleEnd) / 2;
-const encounterRadius = 3;
+- [ ] **Step 2: Position boyfriend in encounter biome**
 
-boyfriend.position.set(Math.cos(encounterMid) * encounterRadius, 0, Math.sin(encounterMid) * encounterRadius);
-boyfriend.lookAt(0, 1, 0);
+```javascript
+// Position boyfriend in encounter biome
+function positionBoyfriend() {
+  const encounterBiome = biomeData[5];
+  const midAngle = (encounterBiome.angleStart + encounterBiome.angleEnd) / 2;
+  const radius = 3;
 
-bouquet.position.set(Math.cos(encounterMid) * encounterRadius + 0.5, 1.0, Math.sin(encounterMid) * encounterRadius);
-chocolateBox.position.set(Math.cos(encounterMid) * encounterRadius - 0.4, 0.8, Math.sin(encounterMid) * encounterRadius);
+  boyfriend.position.set(Math.cos(midAngle) * radius, 0, Math.sin(midAngle) * radius);
+  boyfriend.lookAt(0, 1, 0); // Face center
 
-worldGroup.add(boyfriend);
-worldGroup.add(bouquet);
-worldGroup.add(chocolateBox);
+  // Bouquet in right hand
+  bouquet.position.set(
+    Math.cos(midAngle) * radius + 0.5,
+    1.0,
+    Math.sin(midAngle) * radius
+  );
 
-// Hearts particles
+  // Chocolates in left hand
+  chocolateBox.position.set(
+    Math.cos(midAngle) * radius - 0.4,
+    0.8,
+    Math.sin(midAngle) * radius
+  );
+
+  worldGroup.add(boyfriend);
+  worldGroup.add(bouquet);
+  worldGroup.add(chocolateBox);
+}
+
+positionBoyfriend();
+
+// Hearts particles (floating around encounter)
+const heartParticles = new THREE.BufferGeometry();
 const heartCount = 30;
 const heartPositions = new Float32Array(heartCount * 3);
 const heartSpeeds = [];
+
 for (let i = 0; i < heartCount; i++) {
   const a = Math.random() * Math.PI * 2;
   const r = 0.5 + Math.random() * 2;
   heartPositions[i * 3] = Math.cos(a) * r;
   heartPositions[i * 3 + 1] = Math.random() * 3;
   heartPositions[i * 3 + 2] = Math.sin(a) * r;
-  heartSpeeds.push({ x: (Math.random() - 0.5) * 0.005, y: 0.005 + Math.random() * 0.01, z: (Math.random() - 0.5) * 0.005 });
+  heartSpeeds.push({
+    x: (Math.random() - 0.5) * 0.005,
+    y: 0.005 + Math.random() * 0.01,
+    z: (Math.random() - 0.5) * 0.005,
+  });
 }
-const heartGeo = new THREE.BufferGeometry();
-heartGeo.setAttribute('position', new THREE.BufferAttribute(heartPositions, 3));
-const heartMat = new THREE.PointsMaterial({ color: 0xff1493, size: 0.12, transparent: true, opacity: 0.7 });
-const hearts = new THREE.Points(heartGeo, heartMat);
-hearts.position.set(Math.cos(encounterMid) * encounterRadius, 1.5, Math.sin(encounterMid) * encounterRadius);
-worldGroup.add(hearts);
 
+heartParticles.setAttribute('position', new THREE.BufferAttribute(heartPositions, 3));
+
+const heartMatP = new THREE.PointsMaterial({
+  color: 0xff1493,
+  size: 0.12,
+  transparent: true,
+  opacity: 0.7,
+});
+const hearts = new THREE.Points(heartParticles, heartMatP);
+
+const encounterMid = (biomeData[5].angleStart + biomeData[5].angleEnd) / 2;
+hearts.position.set(Math.cos(encounterMid) * 3, 1.5, Math.sin(encounterMid) * 3);
+worldGroup.add(hearts);
+```
+
+- [ ] **Step 3: Add the ending trigger**
+
+```javascript
 // --- Ending Trigger ---
 let endingStarted = false;
+let endingTimer = 0;
 
 function checkEnding() {
   if (cluesFound >= 6 && !endingStarted) {
     endingStarted = true;
 
+    // Auto-rotate to encounter biome
     const targetAngle = -encounterMid;
     const startRotation = worldGroup.rotation.y;
+
     let progress = 0;
+    const rotateDuration = 120; // frames
 
     function rotateToEncounter() {
       if (progress >= 1) return;
@@ -880,40 +1152,178 @@ function checkEnding() {
     }
     rotateToEncounter();
 
+    // Show ending dialogue after rotation
     setTimeout(() => {
-      dialogueBox.textContent = '¡Lo encontraste!';
+      dialogueBox.textContent = '💕 ¡Lo encontraste! 💕';
       dialogueBox.classList.add('visible');
+
       setTimeout(() => {
         dialogueBox.textContent = 'Él se arrodilla y te entrega un ramo de lirios y una caja de chocolates...';
         setTimeout(() => {
-          dialogueBox.textContent = '¡Feliz final!';
+          dialogueBox.textContent = '🎉 ¡Feliz final! 🎉';
         }, 3000);
       }, 2500);
     }, 3000);
   }
 }
 
-// --- World Rotation ---
-const keys = { left: false, right: false };
+// Add checkEnding to animation loop:
+// In the animate function, add: checkEnding();
+```
 
+- [ ] **Step 4: Add boyfriend idle animation + heart float**
+
+```javascript
+// Add to animate function:
+// Animate NPCs float
+worldGroup.children.forEach((child) => {
+  if (child.userData && child.userData.floatOffset !== undefined) {
+    const floatY = Math.sin(girlTime * 2 + child.userData.floatOffset) * 0.1;
+    child.position.y = floatY;
+    if (child.userData.glow) {
+      child.userData.glow.material.opacity = 0.3 + Math.sin(girlTime * 3 + child.userData.floatOffset) * 0.2;
+    }
+  }
+});
+
+// Animate encounter biome hearts
+const hPos = hearts.geometry.attributes.position.array;
+for (let i = 0; i < heartCount; i++) {
+  hPos[i * 3 + 1] += heartSpeeds[i].y;
+  if (hPos[i * 3 + 1] > 3.5) hPos[i * 3 + 1] = 0;
+}
+hearts.geometry.attributes.position.needsUpdate = true;
+
+// Animate bouquet sway
+bouquet.rotation.z = Math.sin(girlTime * 1.5) * 0.1;
+```
+
+- [ ] **Step 5: Verify ending**
+
+Open file. Find all 6 clues. Expected: auto-rotation to encounter zone, boyfriend visible with flowers and chocolates, hearts floating, dialogue shows ending.
+
+- [ ] **Step 6: Commit**
+
+---
+
+### Task 6: Polish — Camera Animation, Transitions, UI
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (fine-tune existing code)
+
+**Interfaces:**
+- Consumes: all previous tasks
+- Produces: polished final game
+
+- [ ] **Step 1: Refine camera position**
+
+```javascript
+// Better camera angle
+camera.position.set(0, 8, 14);
+camera.lookAt(0, 0, 0);
+```
+
+- [ ] **Step 2: Add intro animation**
+
+```javascript
+// --- Intro Animation ---
+let introProgress = 1; // 0 = animating, 1 = done
+
+function startIntro() {
+  introProgress = 0;
+  camera.position.set(0, 20, 25);
+  camera.lookAt(0, 0, 0);
+
+  function animateIntro() {
+    if (introProgress >= 1) return;
+    introProgress += 0.02;
+    const ease = 1 - Math.pow(1 - introProgress, 3);
+    camera.position.y = 20 - (20 - 8) * ease;
+    camera.position.z = 25 - (25 - 14) * ease;
+    camera.lookAt(0, 0, 0);
+    if (introProgress < 1) requestAnimationFrame(animateIntro);
+  }
+  animateIntro();
+}
+
+// Auto-start intro on load
+setTimeout(() => {
+  startIntro();
+}, 500);
+```
+
+- [ ] **Step 3: Add dialogue dismiss**
+
+```javascript
+// Click to dismiss dialogue
+document.addEventListener('click', () => {
+  dialogueBox.classList.remove('visible');
+});
+```
+
+- [ ] **Step 4: Add ambient particles for atmosphere**
+
+```javascript
+// --- Ambient Particles ---
+const particleCount = 200;
+const particleGeo = new THREE.BufferGeometry();
+const particlePos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount * 3; i++) {
+  particlePos[i] = (Math.random() - 0.5) * 40;
+  particlePos[++i] = Math.random() * 12;
+  particlePos[++i] = (Math.random() - 0.5) * 40;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+
+const particleMat = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.03,
+  transparent: true,
+  opacity: 0.4,
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// In animate:
+particles.rotation.y += 0.0002;
+```
+
+- [ ] **Step 5: Test everything**
+
+Open file. Expected: intro camera animation, ambient particles, world rotates, clues work, ending triggers correctly.
+
+- [ ] **Step 6: Commit**
+
+---
+
+### Task 7: Keyboard-Only Observation Mode Fix
+
+**Files:**
+- Modify: `carpeta-de-prueba/index.html` (detect current state)
+
+- [ ] **Step 1: Verify keyboard interaction doesn't conflict**
+
+Ensure Space key for interaction doesn't scroll the page:
+
+```javascript
+// Prevent Space from scrolling
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
-  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+  }
 });
+```
 
-document.addEventListener('keyup', (e) => {
-  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
-  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
-});
+- [ ] **Step 2: Final verification**
 
-// --- Start ---
-animate();
+Full playthrough:
+1. Open file ✓
+2. Intro animation plays ✓
+3. Arrow keys rotate world ✓
+4. NPCs and signs glow ✓
+5. Space shows dialogue ✓
+6. Find all 6 clues ✓
+7. Ending scene triggers ✓
+8. Boyfriend with flowers + chocolates visible ✓
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-</script>
-</body>
-</html>
+- [ ] **Step 3: Commit**
