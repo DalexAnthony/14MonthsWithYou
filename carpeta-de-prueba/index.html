@@ -63,7 +63,10 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+// Prevent Space from scrolling
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ' || e.key === 'Spacebar') e.preventDefault();
+});
 
 // --- Scene Setup ---
 const scene = new THREE.Scene();
@@ -157,6 +160,8 @@ function animate() {
 
   // Check ending
   checkEnding();
+
+  particles.rotation.y += 0.0002;
 
   renderer.render(scene, camera);
 }
@@ -681,11 +686,19 @@ document.addEventListener('keydown', (e) => {
     if (idx >= cluesFound) {
       cluesFound++;
       clueCounter.textContent = `✦ Pista ${cluesFound} / 6`;
+      // Hide controls hint on first interaction
+      const controlsHint = document.getElementById('controls-hint');
+      if (controlsHint) controlsHint.style.display = 'none';
     }
 
     interactHint.classList.remove('visible');
     nearInteractable = null;
   }
+});
+
+// Click to dismiss dialogue
+document.addEventListener('click', () => {
+  dialogueBox.classList.remove('visible');
 });
 
 // --- Boyfriend Character ---
@@ -892,6 +905,49 @@ function checkEnding() {
     }, 3000);
   }
 }
+
+// --- Ambient Particles ---
+const particleCount = 200;
+const particleGeo = new THREE.BufferGeometry();
+const particlePos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount * 3; i++) {
+  particlePos[i] = (Math.random() - 0.5) * 40;
+  particlePos[++i] = Math.random() * 12;
+  particlePos[++i] = (Math.random() - 0.5) * 40;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+const particleMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, transparent: true, opacity: 0.4 });
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// --- Intro Animation ---
+let introProgress = 1;
+
+function startIntro() {
+  introProgress = 0;
+  const startY = camera.position.y;
+  const startZ = camera.position.z;
+  const targetY = 8;
+  const targetZ = 14;
+
+  function animateIntro() {
+    if (introProgress >= 1) {
+      camera.position.y = targetY;
+      camera.position.z = targetZ;
+      camera.lookAt(0, 0, 0);
+      return;
+    }
+    introProgress += 0.015;
+    const ease = 1 - Math.pow(1 - introProgress, 3);
+    camera.position.y = startY + (targetY - startY) * ease;
+    camera.position.z = startZ + (targetZ - startZ) * ease;
+    camera.lookAt(0, 0, 0);
+    requestAnimationFrame(animateIntro);
+  }
+  animateIntro();
+}
+
+setTimeout(startIntro, 300);
 
 // --- World Rotation ---
 const keys = { left: false, right: false };
