@@ -1,0 +1,542 @@
+/* ============================================================
+   MAIN.CSS — Design System, Variables, Typography & Layout
+   ============================================================
+   Defines the visual foundation: color palette, typography,
+   global resets, and responsive layout structures.
+   Palette: pinks, mauves, soft golds — retro-elegant aesthetic
+   ============================================================ */
+
+/* ---- Google Fonts Import ---- */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap');
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES — Color Palette & Design Tokens
+   ============================================================ */
+:root {
+    /* — Page & Background — */
+    --bg-deep:          #0A0512;        /* Ultra deep violet-black */
+    --bg-page:          #12081F;        /* Deep violet page background */
+    --bg-board:         #180A26;        /* Midnight purple board */
+    --bg-board-alt:     #11051D;        /* Ultra dark purple variant */
+
+    /* — Burgundy (Borgoña) Family — */
+    --color-burgundy:      #601323;     /* Rich deep burgundy */
+    --color-burgundy-light:#8C2539;     /* Light burgundy accent */
+    --color-burgundy-deep: #400713;     /* Darkest burgundy shadow */
+
+    /* — Purple (Morado) Family — */
+    --color-purple:        #3C165A;     /* Muted violet/purple */
+    --color-purple-light:  #5D2986;     /* Vibrant violet */
+    --color-purple-deep:   #250B3A;     /* Shadow violet */
+    --color-mauve:         #9C6EA3;     /* Muted mauve */
+
+    /* — Accent Gold & Cream — */
+    --color-gold:       #C5A059;        /* Antique gold */
+    --color-gold-light: #E5C384;        /* Soft gold */
+    --color-cream:      #F7EFE2;        /* Warm cream */
+    --color-blush:      #E8CCD1;        /* Soft dusty cream-pink */
+
+    /* — Nature / Green Family (Botanical Illustration style) — */
+    --color-leaf:       #2A4D3B;        /* Flat illustration dark leaf green */
+    --color-leaf-dark:  #183225;        /* Shadow leaf green */
+    --color-stem:       #3E654F;        /* Stem green */
+    --color-leaf-light: #528B6D;        /* Light accent leaf green */
+
+    /* — Text Colors — */
+    --color-text:       #F7EFE2;        /* Primary text (cream) */
+    --color-text-dim:   #A89699;        /* Dimmed mauve-grey text */
+    --color-text-muted: #5C4B4E;        /* Dark rose-grey text */
+
+    /* — UI Colors — */
+    --color-border:     rgba(197, 160, 89, 0.3);   /* Subtle gold border */
+    --color-shadow:     rgba(0, 0, 0, 0.5);        /* Shadows */
+    --color-glow-pink:  rgba(140, 37, 57, 0.4);    /* Burgundy glow */
+    --color-glow-gold:  rgba(197, 160, 89, 0.3);   /* Gold glow */
+
+    /* — Typography — */
+    --font-display:     'Press Start 2P', monospace;
+    --font-body:        'VT323', monospace;
+
+    /* — Spacing & Sizing — */
+    --border-radius:    0px;
+    --border-radius-lg: 0px;
+    --transition-speed: 0.3s;
+    --flower-border-width: 25px;  /* Narrower Garland border width */
+
+    /* — Pixel Art Theme (Start Screen) — */
+    --pixel-pink:       #FF6B9D;
+    --pixel-cyan:       #00BFFF;
+    --pixel-gold:       #FFD700;
+    --pixel-dark:       #0A0A1E;
+    --pixel-dim:        #1A1A3E;
+    --font-pixel:       'Press Start 2P', monospace;
+    --font-pixel-body:  'VT323', monospace;
+}
+
+/* ============================================================
+   GLOBAL RESET & BASE STYLES
+   ============================================================ */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-deep);
+    color: var(--color-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+
+    /* Subtle background texture */
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(155, 123, 160, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(212, 160, 167, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(201, 169, 110, 0.04) 0%, transparent 60%);
+    background-attachment: fixed;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-cream);
+}
+
+h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 0.02em;
+}
+
+h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+p {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 400;
+}
+
+/* ============================================================
+   SCREEN CONTAINER — Shared by all 3 screens
+   ============================================================ */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+    z-index: 1;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 10;
+}
+
+/* ============================================================
+   GAME CONTAINER — Board + Flower Border Wrapper
+   ============================================================ */
+#game-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--flower-border-width);
+}
+
+/* Canvas Styles */
+#game-canvas {
+    display: block;
+    border: 2px solid var(--pixel-pink, #FF6B9D);
+    border-radius: 0;
+    background: var(--pixel-dim, #1A1A3E);
+    box-shadow:
+        4px 4px 0 var(--pixel-cyan, #00BFFF),
+        0 0 20px rgba(0, 0, 0, 0.6);
+    image-rendering: pixelated;
+}
+
+/* ============================================================
+   GAME INFO — Score, Progress Display Below Board
+   ============================================================ */
+#game-info {
+    display: none; /* Oculto por petición del usuario */
+}
+
+#message-progress {
+    font-family: 'VT323', monospace;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: var(--color-text-dim);
+    line-height: 1.8;
+    letter-spacing: 1px;
+    word-break: break-word;
+    min-height: 2.5em;
+    padding: 12px 18px;
+    background: rgba(10, 10, 30, 0.6);
+    border: 2px solid var(--pixel-pink, #FF6B9D);
+}
+
+#message-progress .revealed {
+    color: var(--pixel-gold, #FFD700);
+    font-weight: 400;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+#message-progress .hidden-char {
+    color: var(--pixel-dim, #1A1A3E);
+    opacity: 0.7;
+}
+
+#taco-count {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: var(--pixel-pink, #FF6B9D);
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   BUTTONS — Shared Button Styles
+   ============================================================ */
+.btn {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    font-weight: 600;
+    padding: 14px 40px;
+    border: 2px solid var(--color-gold);
+    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--color-gold);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(201, 169, 110, 0.15),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.btn:hover {
+    background: rgba(201, 169, 110, 0.1);
+    box-shadow:
+        0 0 20px rgba(201, 169, 110, 0.2),
+        0 0 40px rgba(201, 169, 110, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 0 10px rgba(201, 169, 110, 0.15);
+}
+
+/* ============================================================
+   MOBILE CONTROLS
+   ============================================================ */
+#mobile-controls {
+    display: none;
+    margin-top: 16px;
+    gap: 4px;
+}
+
+#mobile-controls .ctrl-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+#mobile-controls .ctrl-btn {
+    width: 56px;
+    height: 56px;
+    border: 2px solid var(--pixel-cyan, #00BFFF);
+    border-radius: 0;
+    background: rgba(10, 10, 30, 0.8);
+    color: var(--pixel-cyan, #00BFFF);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: all 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 2px 2px 0 var(--pixel-cyan, #00BFFF);
+}
+
+#mobile-controls .ctrl-btn:active {
+    background: var(--pixel-cyan, #00BFFF);
+    color: var(--pixel-dark, #0A0A1E);
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+#mobile-controls .ctrl-btn.spacer {
+    visibility: hidden;
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.text-gold { color: var(--color-gold); }
+.text-pink { color: var(--color-pink); }
+.text-cream { color: var(--color-cream); }
+.text-mauve { color: var(--color-mauve); }
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-mauve-deep);
+    border-radius: 3px;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+    :root {
+        --flower-border-width: 20px;
+    }
+
+    #mobile-controls {
+        display: grid;
+        grid-template-rows: auto auto auto;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    :root {
+        --flower-border-width: 16px;
+    }
+
+    .btn {
+        padding: 12px 32px;
+        font-size: 0.95rem;
+    }
+
+    #game-info {
+        padding: 0 8px;
+    }
+
+    #mobile-controls .ctrl-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+    :root {
+        --flower-border-width: 12px;
+    }
+}
+
+/* ============================================================
+   PORTRAIT PANEL — Dog portrait + name outside canvas
+   ============================================================ */
+#portrait-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+#portrait-frame {
+    border: 3px solid var(--pixel-pink, #FF6B9D);
+    border-radius: 0;
+    overflow: hidden;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 30, 0.8);
+    box-shadow: 4px 4px 0 var(--pixel-cyan, #00BFFF);
+}
+
+#portrait-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+}
+
+#portrait-name {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    color: var(--pixel-gold, #FFD700);
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+@media (min-width: 900px) {
+    #portrait-panel {
+        position: fixed;
+        left: calc(50% + 560px);
+        top: 50%;
+        transform: translateY(-50%);
+        margin-top: 0;
+    }
+
+    #portrait-frame {
+        width: 140px;
+        height: 140px;
+    }
+
+    #portrait-name {
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================================
+   SCISSORS PANEL — Haircut button below portrait
+   ============================================================ */
+#scissors-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+#scissors-frame {
+    border: 3px solid #FFD700;
+    border-radius: 0;
+    overflow: hidden;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 30, 0.8);
+    box-shadow: 3px 3px 0 #00BFFF;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+}
+
+#scissors-frame:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+#scissors-label {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    color: #FFD700;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.scissors-msg {
+    font-family: var(--font-pixel);
+    font-size: 0.45rem;
+    color: #ff6b6b;
+    text-align: center;
+    max-width: 140px;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.scissors-msg.show {
+    opacity: 1;
+}
+
+@media (min-width: 900px) {
+    #scissors-panel {
+        position: fixed;
+        left: calc(50% + 560px);
+        top: calc(50% + 180px);
+        transform: translateY(-50%);
+        margin-top: 0;
+    }
+
+    #scissors-frame {
+        width: 80px;
+        height: 80px;
+    }
+
+    #scissors-label {
+        font-size: 0.55rem;
+    }
+
+    .scissors-msg {
+        font-size: 0.5rem;
+        max-width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    #portrait-frame {
+        width: 80px;
+        height: 80px;
+    }
+    #portrait-name {
+        font-size: 0.55rem;
+    }
+    #scissors-frame {
+        width: 56px;
+        height: 56px;
+    }
+    #scissors-label {
+        font-size: 0.4rem;
+    }
+    .scissors-msg {
+        font-size: 0.35rem;
+        max-width: 110px;
+    }
+}

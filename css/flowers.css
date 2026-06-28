@@ -1,0 +1,305 @@
+/* ============================================================
+   FLOWERS.CSS — Animated Botanical Flower Border
+   ============================================================
+   All CSS for the decorative flowers around the game board.
+   Flowers are created with SVG (generated in JS) and animated
+   with pure CSS. Botanical illustration style: delicate petals,
+   soft colors, gentle swaying movements.
+   ============================================================ */
+
+/* ============================================================
+   SECTION 1: Flower Border Container
+   ============================================================ */
+#flower-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: visible;
+}
+
+/* ============================================================
+   SECTION 2: Individual Flower Positioning & Base Styles
+   ============================================================ */
+.flower {
+    position: absolute;
+    transform-origin: center bottom;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: filter 0.5s ease;
+    will-change: transform;
+}
+
+/* Flower size variants */
+.flower--sm {
+    width: 24px;
+    height: 24px;
+}
+
+.flower--md {
+    width: 34px;
+    height: 34px;
+}
+
+.flower--lg {
+    width: 44px;
+    height: 44px;
+}
+
+/* ============================================================
+   SECTION 3: Leaf Elements
+   ============================================================ */
+.leaf {
+    position: absolute;
+    transform-origin: bottom center;
+    will-change: transform;
+}
+
+.leaf--sm {
+    width: 16px;
+    height: 20px;
+}
+
+.leaf--md {
+    width: 22px;
+    height: 28px;
+}
+
+/* ============================================================
+   SECTION 4: Vine / Stem Decorative Lines
+   ============================================================ */
+.vine-line {
+    position: absolute;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.vine-line path {
+    fill: none;
+    stroke: var(--color-leaf);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    opacity: 0.5;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    animation: vine-draw 2s ease-out forwards;
+}
+
+/* ============================================================
+   SECTION 5: ANIMATIONS — Gentle Botanical Motion
+   ============================================================ */
+
+/* — Sway: gentle left-right rotation — */
+@keyframes sway {
+    0%, 100% {
+        transform: rotate(var(--sway-start, -3deg));
+    }
+    50% {
+        transform: rotate(var(--sway-end, 3deg));
+    }
+}
+
+/* — Sway variant with translation — */
+@keyframes sway-drift {
+    0%, 100% {
+        transform: rotate(-2deg) translateX(-1px);
+    }
+    50% {
+        transform: rotate(2deg) translateX(1px);
+    }
+}
+
+/* — Breathe: subtle scale pulse — */
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.06);
+    }
+}
+
+/* — Petal flutter: combined rotation + scale — */
+@keyframes petal-flutter {
+    0%, 100% {
+        transform: rotate(0deg) scale(1);
+    }
+    25% {
+        transform: rotate(2deg) scale(1.03);
+    }
+    75% {
+        transform: rotate(-2deg) scale(0.97);
+    }
+}
+
+/* — Leaf wave: asymmetric sway for leaves — */
+@keyframes leaf-wave {
+    0%, 100% {
+        transform: rotate(var(--leaf-start, -5deg)) scaleX(1);
+    }
+    30% {
+        transform: rotate(var(--leaf-mid, 3deg)) scaleX(0.95);
+    }
+    70% {
+        transform: rotate(var(--leaf-end, -2deg)) scaleX(1.02);
+    }
+}
+
+/* — Bloom: flower appearing animation — */
+@keyframes bloom {
+    0% {
+        transform: scale(0) rotate(-30deg);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* — Vine draw-in animation — */
+@keyframes vine-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* — Glow pulse for special flowers — */
+@keyframes glow-pulse {
+    0%, 100% {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3))
+                drop-shadow(0 0 6px rgba(212, 160, 167, 0));
+    }
+    50% {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3))
+                drop-shadow(0 0 8px rgba(212, 160, 167, 0.25));
+    }
+}
+
+/* ============================================================
+   SECTION 6: Animation Classes (applied via JS)
+   ============================================================ */
+.anim-sway {
+    animation: sway var(--anim-duration, 4s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-sway-drift {
+    animation: sway-drift var(--anim-duration, 5s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-breathe {
+    animation: breathe var(--anim-duration, 3s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-petal {
+    animation: petal-flutter var(--anim-duration, 5s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-leaf {
+    animation: leaf-wave var(--anim-duration, 4s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-bloom {
+    animation: bloom 0.8s ease-out forwards;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+.anim-glow {
+    animation: glow-pulse var(--anim-duration, 3s) ease-in-out infinite;
+    animation-delay: var(--anim-delay, 0s);
+}
+
+/* ============================================================
+   SECTION 7: SVG Petal Colors & Fills
+   ============================================================ */
+
+/* Dense garland flower petals — multi-species palette */
+.petal-orange   { fill: #D35400;  opacity: 0.95; }
+.petal-peach    { fill: #E67E22;  opacity: 0.95; }
+.petal-apricot  { fill: #F39C12;  opacity: 0.95; }
+.petal-white    { fill: #F5F6FA;  opacity: 0.98; }
+.petal-cream    { fill: #F7EFE2;  opacity: 0.95; }
+.petal-purple   { fill: #7B68EE;  opacity: 0.95; }
+.petal-violet   { fill: #9370DB;  opacity: 0.92; }
+.petal-lavender { fill: #B19CD9;  opacity: 0.90; }
+.petal-yellow   { fill: #F1C40F;  opacity: 0.95; }
+.petal-gold     { fill: #DAA520;  opacity: 0.95; }
+.petal-pink     { fill: #E88B9C;  opacity: 0.95; }
+.petal-rose     { fill: #C0392B;  opacity: 0.90; }
+
+/* Flower centers */
+.center-burgundy { fill: #4A000F; }
+.center-gold     { fill: #D4AF37; }
+.center-orange   { fill: #E67E22; }
+.center-brown    { fill: #5D3A1A; }
+.center-purple   { fill: #4A266A; }
+
+/* Leaf fills (dark green botanical) */
+.leaf-fill     { fill: #1E372C;  opacity: 0.95; }
+.leaf-dark     { fill: #0E1F17;  opacity: 0.9; }
+.leaf-light    { fill: #2C4D3E;  opacity: 0.95; }
+
+/* Stem strokes (delicate branches) */
+.stem-stroke {
+    fill: none;
+    stroke: #223F32;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    opacity: 0.8;
+}
+
+/* ============================================================
+   SECTION 8: Responsive Flower Scaling
+   ============================================================ */
+@media (max-width: 768px) {
+    .flower--lg {
+        width: 36px;
+        height: 36px;
+    }
+    .flower--md {
+        width: 28px;
+        height: 28px;
+    }
+    .flower--sm {
+        width: 20px;
+        height: 20px;
+    }
+    .leaf--md {
+        width: 18px;
+        height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .flower--lg {
+        width: 30px;
+        height: 30px;
+    }
+    .flower--md {
+        width: 22px;
+        height: 22px;
+    }
+    .flower--sm {
+        width: 16px;
+        height: 16px;
+    }
+    .leaf--md {
+        width: 14px;
+        height: 18px;
+    }
+    .leaf--sm {
+        width: 12px;
+        height: 14px;
+    }
+}
